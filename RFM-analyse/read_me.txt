@@ -7,4 +7,4 @@
 
 rfm_analyse содержит сам ноутбук.
 
-online_retail_listing.csv - датафрейм
+online_retail_listing_2010_head_1000.csv - датафрейм за 2010 срез в 1000 записей
