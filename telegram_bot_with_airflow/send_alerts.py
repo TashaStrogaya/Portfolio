@@ -15,7 +15,7 @@ import telegram
 import io
 
 # функция для извлечения данных
-def ch_get_df(query='Select 1', host='https://clickhouse.lab.karpov.courses', db = 'simulator_20220820', user='student', password='dpo_python_2020'):
+def ch_get_df(query='Select 1', host='', db = '', user='', password=''):
     
     connection = {'host': host,
                       'database': db,
@@ -65,7 +65,7 @@ def dag_catch_your_alerts():
                 countIf(action, action = 'view') as views,
                 round(likes/views * 100 , 2) as ctr
             from
-                simulator_20220820.feed_actions  
+               db.feed_actions  
             WHERE 
                 time >= today() - 1 
                 and time < toStartOfFifteenMinutes(now())
@@ -79,7 +79,7 @@ def dag_catch_your_alerts():
                 uniqExact(user_id) as dau_messenger,
                 count() as messeges
             from
-                simulator_20220820.message_actions  
+                db.message_actions  
             WHERE 
                 time >= today() - 1 
                 and time < toStartOfFifteenMinutes(now())
@@ -93,23 +93,26 @@ def dag_catch_your_alerts():
         df = ch_get_df(query)
         return df
     
-    my_token = '5669503540:AAGDvBAeH7fJf0-7uJM260hQY_zGEr5lBZ4'
-    # my_token = os.environ.get("REPORT_BOT_TOKEN")
+    my_token =  os.environ.get("REPORT_BOT_TOKEN")
     bot = telegram.Bot(token=my_token)
     
     # функция проверки метрики на алерт
     def check_metric(df, metric, n = 5, a = 3):
     
+        # Расчёт квантилей в скользящем окне
         df['q75'] = df[metric].shift(1).rolling(n, min_periods=1).quantile(0.75)
         df['q25'] = df[metric].shift(1).rolling(n, min_periods=1).quantile(0.25)
         
+        # Расчёт МКР и границ метрики
         df['iqr'] = df['q75'] - df['q25']
         df['up'] = df['q75'] + a * df['iqr']
         df['low'] = df['q25'] - a * df['iqr']
         
+        # Смягченеие границ метрики
         df['up'] = df.up.rolling(3, min_periods = 1).mean()
         df['low'] = df.low.rolling(3, min_periods = 1).mean()
         
+        # Проверка выхода значения за границы
         if df[metric].iloc[-1] < df['low'].iloc[-1] or  df[metric].iloc[-1] > df['up'].iloc[-1]:
             return df, 1
         return df, 0
@@ -142,6 +145,7 @@ def dag_catch_your_alerts():
                 
                 ax.fill_between(x = df.time_event, y1 = df.low, y2 = df.up, color = '#228b22', alpha = 0.2, label = 'Зона нормальности')
 
+                # Оставляем метки на оси абсцис и сетку только для каждого 12 значения
                 sticks_x = []
                 for ind, item in enumerate(df.time_event.unique()):
                                 if ind % 12 == 0:
@@ -153,7 +157,7 @@ def dag_catch_your_alerts():
                 plt.ylabel('')
                 plt.xlabel('')
 
-                plt.tight_layout()
+                plt.tight_layout()  # Уменьшаем рамку
                 plot_object = io.BytesIO()
                 plt.savefig(plot_object)
                 plot_object.seek(0)
@@ -164,7 +168,7 @@ def dag_catch_your_alerts():
                 print(f'ALERT with {metric}! Plots sent successfuly.')
     
     # Запуск таска
-    send_alert(extract(), -721111166)
+    send_alert(extract())
     
 # Объявление дага
 dag_catch_your_alerts = dag_catch_your_alerts()
