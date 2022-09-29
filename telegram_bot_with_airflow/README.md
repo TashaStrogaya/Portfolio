@@ -25,4 +25,6 @@
 Принимаеи n = 5 (т.е. считаем относительно окна = 5 предыдущих 15-минуток) и а = 3 и получаем на выходе такую картину в случае срабатывания алерта:
 ![dau_mesg](https://user-images.githubusercontent.com/94457858/193009174-582a0242-2411-4d71-ab71-2e4b80cb6f3f.jpg)
 ![views](https://user-images.githubusercontent.com/94457858/193009208-3e5677c4-fd9e-4d51-8dac-3ad72eeb5561.jpg)
+Пример текста алёрта:
+![image](https://user-images.githubusercontent.com/94457858/193010044-54f53730-8c23-49ea-b941-3dd577dd4c80.png)
 Дашборд по ссылке лежит в формате изображения как файл *Current_DATA_in_image_for_alerts*
