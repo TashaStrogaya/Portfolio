@@ -275,6 +275,7 @@ def play_game(deck = Deck()):
         step = step + 1
         table = []
 
+        # Защита от зацикливания
         if step >= 100:
             step = 100
             player1, player2 = [], []
