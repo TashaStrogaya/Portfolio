@@ -196,7 +196,7 @@ def play_game(deck = Deck()):
     attacker = True  # Флаг, что аттакует 1 игрок, в конце каждого раунда меняется на противоположное значение
 
     # играем, пока у игроков есть карты
-    while (player1.__len__() != 0 and player2.__len__() != 0):
+    while (player1 and player2):
         # Определяем аттакующего игрока
         if attacker:
             attack_player, defense_player = player1, player2
