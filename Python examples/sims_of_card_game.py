@@ -22,9 +22,11 @@
 5. При необходимости карты добираются из колоды
 6. Если Игрок-2 отбился, то Игрок-1 и Игрок-2 меняются местами. Игрок-2 ходит, Игрок-1 отбивается.
 
-NB в чуть меньше, чем в 1 случае из 1000 происходит зацикливание (ходов больше 1000), будем считать, что игроки договорились на ничью.
+NB в среднем 7 случаях из 10000 происходит зацикливание (ходов больше 1000), будем считать, что игроки договорились на ничью.
 А количество раундов в таком случае возьмём как медиану из уже собранного распределения раундов.
-По итогу множественных симуляций было получено, что при раундах > 100, в ~8/9 будет зацикливание. Поэтому 100 будет границей.
+По итогу множественных симуляций было получено, что при раундах > 100 (таких ~16), в половине будет зацикливание. Поэтому 100 будет границей.
+
+При запуске симуляция независимо от предыдущих игр чередуется право первого хода у 1 и 2 игрока.
 '''
 
 
@@ -184,8 +186,9 @@ def get_cards(cur_deck: Deck, player: list):
         for card in cur_deck.draw(10 - len(player)):
             player.append(card)
 
+
 # Имитация игры
-def play_game(deck = Deck()):
+def play_game(deck=Deck(), whose_turn_flg=True):
 
     # игроки берут начальные 10 карт
     player1 = deck.draw(10)
@@ -193,7 +196,7 @@ def play_game(deck = Deck()):
     table = []  # Сущность стола
 
     step = 1  # Номер раунда
-    attacker = True  # Флаг, что аттакует 1 игрок, в конце каждого раунда меняется на противоположное значение
+    attacker = whose_turn_flg  # Флаг = True - аттакует 1 игрок, в конце каждого раунда меняется на противоположное значение
 
     # играем, пока у игроков есть карты
     while (player1 and player2):
@@ -301,41 +304,45 @@ steps_no_winner = []  # Распрделение количества раунд
 steps_winner_1 = []  # Распрделение количества раундов с победой игрока 1
 steps_winner_2 = []  # Распрделение количества раундов с победой игрока 2
 
+whose_turn = True  # Чередование хода в начале игры
 
 # Имитация 10к игр с сохранением результатов
 for i in range(10000):
 
     deck_s = Deck()
     deck_s.shuffle()
-    res, step = play_game(deck_s)
+
+    res, step_val = play_game(deck_s, whose_turn)
+    whose_turn = not whose_turn
 
     # Ничья при зацикливании
-    if step == 100:
-        step = np.median(steps)
+    if step_val == 100:
+        step_val = np.median(steps)
 
     results.append(res)
-    steps.append(step)
+    steps.append(step_val)
 
     if res == 0:
-        steps_no_winner.append(step)
+        steps_no_winner.append(step_val)
     elif res == 1:
-        steps_winner_1.append(step)
+        steps_winner_1.append(step_val)
     else:
-        steps_winner_2.append(step)
+        steps_winner_2.append(step_val)
 
 # Считаем количество каждого исхода
 cnt = dict(Counter(results))
 
 # Отрезаю хвост, больше 45 для наглядности побед 1 игрока
-steps_winner_1_45 = [step for step in steps_winner_1 if step < 45]
+steps_winner_1_40 = [step for step in steps_winner_1 if step <= 40]
+steps_winner_2_40 = [step for step in steps_winner_2 if step <= 40]
 
 # Строим отчёт по общей статистике игр
 sns.set()
-fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(16,8))
+fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(16, 8))
 
 sns.histplot(steps, kde=True, ax=axes[0, 0], color='#013220', binwidth=1)
-sns.histplot(steps_winner_1_45, kde=True, ax=axes[1, 0], color='#013220', binwidth=1)
-sns.histplot(steps_winner_2, kde=True, ax=axes[1, 1], color='#013220', binwidth=1)
+sns.histplot(steps_winner_1_40, kde=True, ax=axes[1, 0], color='#013220', binwidth=1)
+sns.histplot(steps_winner_2_40, kde=True, ax=axes[1, 1], color='#013220', binwidth=1)
 sns.histplot(steps_no_winner, kde=True, ax=axes[2, 0], color='#013220', binwidth=1)
 
 my_pal_tags = ["#aac1bf", "#aac1b2", "#aac1bf"]
@@ -345,16 +352,19 @@ sns.barplot([*cnt], [*cnt.values()], ax=axes[0, 1], palette=my_pal, edgecolor='#
 fig.suptitle('Игрок 1 ходит первой картой - минимальной с руки, игрок 2 - случайной')
 axes[0, 0].set_title('Количество раундов')
 axes[0, 1].set_title('Распределение результатов')
-axes[1, 0].set_title('Победа игрока 1, раундов < 45')
-axes[1, 1].set_title('Победа игрока 2')
+axes[1, 0].set_title('Победа игрока 1, раундов <= 40')
+axes[1, 1].set_title('Победа игрока 2, раундов <= 40')
 axes[2, 0].set_title('Ничья')
 
 # Для исследования среднего, использую медиану, т.к. она менее чувствительна к выбросам
 mesg = "По итогам 10к игр.\n" + \
     f"В среднем сыграно раундов: {np.median(steps):.0f}\n\tПри ничье: {np.median(steps_no_winner):.0f}.\n" + \
        f"\tПри победе игрока 1: {np.median(steps_winner_1):.0f}.\n\tПри победе игрока 2: {np.median(steps_winner_2):.0f}." + \
-    f"\nБольше 40 раундов: {len([step for step in steps if step > 40])} раз."
-axes[2, 1].text(x=0.2, y=0.07, s=mesg, fontsize=17, color='#013220')
+    f"\nБольше 40 раундов при победе 1 | 2 игрока: {len([step for step in steps_winner_1 if step > 40])} | {len([step for step in steps_winner_2 if step > 40])} раз."
+axes[2, 1].text(x=0.05, y=0.13, s=mesg, fontsize=16, color='#013220')
+axes[2, 1].grid(False)
+axes[2, 1].get_xaxis().set_visible(False)
+axes[2, 1].get_yaxis().set_visible(False)
 
 fig.tight_layout()
 plt.show()
