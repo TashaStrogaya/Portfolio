@@ -372,10 +372,9 @@ axes[1, 0].set_title('Победа игрока 1, раундов <= 40')
 axes[1, 1].set_title('Победа игрока 2, раундов <= 40')
 axes[2, 0].set_title('Ничья')
 
-# Для исследования среднего, использую медиану, т.к. она менее чувствительна к выбросам
 mesg = "По итогам 10к игр.\n" + \
-    f"В среднем сыграно раундов: {np.median(steps):.0f}\n\tПри ничье: {np.median(steps_no_winner):.0f}.\n" + \
-       f"\tПри победе игрока 1: {np.median(steps_winner_1):.0f}.\n\tПри победе игрока 2: {np.median(steps_winner_2):.0f}." + \
+    f"В среднем сыграно раундов: {np.mean(steps):.0f}\n\tПри ничье: {np.mean(steps_no_winner):.0f}.\n" + \
+       f"\tПри победе игрока 1: {np.mean(steps_winner_1):.0f}.\n\tПри победе игрока 2: {np.mean(steps_winner_2):.0f}." + \
     f"\nБольше 40 раундов при победе 1 | 2 игрока: {len([step for step in steps_winner_1 if step > 40])} | {len([step for step in steps_winner_2 if step > 40])} раз."
 axes[2, 1].text(x=0.05, y=0.13, s=mesg, fontsize=16, color='#013220')
 axes[2, 1].grid(False)
