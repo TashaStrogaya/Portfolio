@@ -8,3 +8,6 @@
 **rfm_analyse** содержит сам ноутбук.
 
 *online_retail_listing_2010_head_1000.csv* - датафрейм за 2010 срез в 1000 записей
+
+![image](https://user-images.githubusercontent.com/94457858/195394663-7dd5914a-c24a-404b-8288-8fc6732c07d9.png)
+
