@@ -10,4 +10,4 @@
 * Python examples - содержит пример карточной игры со сводной статистикой 10к её симуляций.
 
 
---Наташа Сафронова | Product Analyst | junior/junior+
+--Наташа Сафронова | Product Analyst
